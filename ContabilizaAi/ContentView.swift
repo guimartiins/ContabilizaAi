@@ -6,19 +6,65 @@
 //
 
 import SwiftUI
+import SwiftUICharts
 
 struct ContentView: View {
+    @EnvironmentObject var transactionListViewModel: TransactionListViewModel
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    Text("Olá, Guilherme")
+                        .font(.title2)
+                        .bold()
+                    
+                    let data = transactionListViewModel.accumlateTransactions()
+                    
+                    if !data.isEmpty {
+                        let totalExpenses = data.last?.1 ?? 0
+                        CardView {
+                            VStack(alignment: .leading) {
+                                ChartLabel(totalExpenses.formatted(.currency(code: "BRL")), type: .title, format: "R$ %.02f")
+                                LineChart()
+                            }
+                            .background(Color.systemBackground)
+                        }
+                        .data(data)
+                        .chartStyle(ChartStyle(backgroundColor: Color.systemBackground, foregroundColor: ColorGradient(Color.icon.opacity(0.4), Color.Icon)))
+                    .frame(height: 300)
+                    }
+                    
+                    RecentTransactionList()
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+            }
+            .background(Color.Background)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                // Mark: Notification Icon
+                ToolbarItem {
+                    Image(systemName: "bell.badge")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.Icon, .primary)
+                }
+            }
         }
-        .padding()
+        .navigationViewStyle(.stack)
+        .accentColor(.primary)
     }
 }
 
-#Preview {
-    ContentView()
+struct ContentView_Previews: PreviewProvider {
+    static let transactionListViewModel: TransactionListViewModel = {
+        let transactionListViewModel = TransactionListViewModel()
+        transactionListViewModel.transactions = transactionListPreviewData
+        return transactionListViewModel
+    }()
+    
+    static var previews: some View {
+        ContentView()
+            .environmentObject(transactionListViewModel)
+    }
 }
